@@ -1,0 +1,150 @@
+﻿@page "/productpanel"
+@using System.Net.Http.Json
+@using MudBlazor
+@using EshopWebBlazor.ModelsWeb
+@inject HttpClient _http
+
+<AuthorizeView Roles="Admin">
+    <Authorized>
+
+        <MudDataGrid @ref="_elementGrid" T="ProductWeb" ServerData="ServerReload" ReadOnly="false"
+                     EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.Manual"
+                     CommittedItemChanges="@CommittedItemChanges" Hover="true" Bordered="false" Dense="true">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Panel produtków</MudText>
+                <MudSpacer />
+                <MudTextField T="string" ValueChanged="@(s => OnSearch(s))" Placeholder="Szukaj..." Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                <MudSpacer />
+                <MudButtonGroup Class="ma-0 pa-0" Color="Color.Success" Variant="Variant.Filled">
+                    <MudButton OnClick="AddItem">
+                        Dodaj produkt
+                    </MudButton>
+                </MudButtonGroup>
+            </ToolBarContent>
+            <Columns>
+                <PropertyColumn Property="x => x.Id" Title="ID" Editable="false" Required="false" Sortable="true" />
+                <PropertyColumn Property="x => x.Name" Title="Nazwa" Sortable="true" />
+                <PropertyColumn Property="x => x.Category" Title="Kategoria" Sortable="true" />
+                <PropertyColumn Property="x => x.Price" Title="Cena (zł)" Sortable="true" />
+                <PropertyColumn Property="x => x.Stock" Title="Dostępna ilość" Sortable="true" />
+                <PropertyColumn Property="x => x.Description" Title="Opis" Sortable="true" />
+                <TemplateColumn Title="Edytuj/Usuń">
+                    <CellTemplate Context="mudContext">
+                        <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@(() => UpdateItem(mudContext.Item))" />
+                        <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Delete" OnClick="@(() => DeleteItem(mudContext.Item))" />
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+            <PagerContent>
+                <MudDataGridPager T="ProductWeb" />
+            </PagerContent>
+        </MudDataGrid>
+
+        <MudButton Class="button" href="/" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.KeyboardBackspace">Powrót</MudButton>
+
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    private IEnumerable<ProductWeb> _elementMasterList = [];
+    private MudDataGrid<ProductWeb> _elementGrid = default!;
+    private string searchString = null!;
+    private async Task<GridData<ProductWeb>> ServerReload(GridState<ProductWeb> state, CancellationToken token)
+    {
+        _elementMasterList = await _http.GetFromJsonAsync<List<ProductWeb>>("Products/GetAllProducts", token) ?? new List<ProductWeb>();
+        await Task.Delay(300, token);
+        var data = _elementMasterList;
+
+        if (!string.IsNullOrWhiteSpace(searchString))
+        {
+            data = data.Where(product =>
+                (product.Name != null && product.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase)) ||
+                (product.Category != null && product.Category.Contains(searchString, StringComparison.OrdinalIgnoreCase)) ||
+                (product.Description != null && product.Description.Contains(searchString, StringComparison.OrdinalIgnoreCase)) ||
+                $"{product.Id} {product.Price} {product.Stock}".Contains(searchString)
+            ).ToList();
+        }
+
+        int totalItems = data.Count();
+
+        var sortDefinition = state.SortDefinitions.FirstOrDefault();
+        if (sortDefinition != null)
+        {
+            var direction = sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending;
+
+            switch (sortDefinition.SortBy)
+            {
+                case "Id": data = data.OrderByDirection(direction, x => x.Id).ToList(); break;
+                case "Name": data = data.OrderByDirection(direction, x => x.Name).ToList(); break;
+                case "Category": data = data.OrderByDirection(direction, x => x.Category).ToList(); break;
+                case "Price": data = data.OrderByDirection(direction, x => x.Price).ToList(); break;
+                case "Stock": data = data.OrderByDirection(direction, x => x.Stock).ToList(); break;
+                case "Description": data = data.OrderByDirection(direction, x => x.Description).ToList(); break;
+            }
+        }
+
+        var pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
+
+        return new GridData<ProductWeb> { TotalItems = totalItems, Items = pagedData };
+    }
+
+    private void OnSearch(string text)
+    {
+        searchString = text;
+        _elementGrid.ReloadServerData();
+    }
+
+    private async Task AddItem()
+    {
+        var item = new ProductWeb();
+        await _elementGrid.SetEditingItemAsync(item);
+    }
+
+    private async Task UpdateItem(ProductWeb item)
+    {
+        await _elementGrid.SetEditingItemAsync(item);
+    }
+
+    private async Task DeleteItem(ProductWeb item)
+    {
+        await _http.PostAsJsonAsync("Products/RemoveProduct", item);
+        await _elementGrid.ReloadServerData();
+    }
+
+    public async Task WebAddProduct(ProductWeb item)
+    {
+        await _http.PostAsJsonAsync("Products/AddProduct", new ProductWeb
+        {
+            Name = item.Name,
+            Category = item.Category,
+            Price = item.Price,
+            Stock = item.Stock,
+            Description = item.Description
+        });
+    }
+
+    public async Task WebUpdateProduct(ProductWeb item)
+    {
+        await _http.PutAsJsonAsync("Products/UpdateProduct", item);
+    }
+
+    private async Task<DataGridEditFormAction> CommittedItemChanges(ProductWeb item)
+    {
+        if (string.IsNullOrWhiteSpace(item.Name) || string.IsNullOrWhiteSpace(item.Category) || string.IsNullOrWhiteSpace(item.Description) || decimal.IsNegative(item.Price) || int.IsNegative(item.Stock))
+        {
+            return DataGridEditFormAction.KeepOpen;
+        }
+        if (item.Id == 0)
+        {
+            await WebAddProduct(item);
+        }
+        else
+        {
+            await WebUpdateProduct(item);
+        }
+        await _elementGrid.ReloadServerData();
+
+        return DataGridEditFormAction.Close;
+    }
+}

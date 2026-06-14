@@ -1,0 +1,47 @@
+﻿@page "/register"
+@inject HttpClient _http
+@inject NavigationManager _nav
+@using EshopShared.Enums
+@using EshopWebBlazor.ModelsWeb
+@using MudBlazor
+
+<h3>Rejestracja</h3><br />
+
+<MudTextField Class="input" @bind-Value="username" Placeholder="Nazwa użytkownika" Variant="Variant.Text" Margin="Margin.Dense" /><br />
+<label>( Nazwa użytkownika może składać się wyłącznie z liter i cyfr (bez spacji i znaków specjalnych) i musi mieć od 3 do 20 znaków )</label><br /><br />
+
+<MudTextField Class="input" @bind-Value="email" Placeholder="Email" Variant="Variant.Text" Margin="Margin.Dense" /><br />
+
+<MudTextField Class="input" InputType="InputType.Password" @bind-Value="password" Placeholder="Hasło" Variant="Variant.Text" Margin="Margin.Dense" /><br />
+<label>( Hasło musi mieć min. 8 znaków, zawierać małą i wielką literę oraz cyfrę i znak specjalny )</label><br /><br />
+
+<MudButton Class="button" Variant="Variant.Filled" Color="Color.Primary" @onclick="WebRegister" StartIcon="@Icons.Material.Filled.AccountCircle">Zarejestruj</MudButton><br />
+
+<MudButton Class="button" href="/" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.KeyboardBackspace">Powrót</MudButton>
+
+@if (isRegistered == true)
+{
+    <MudAlert Severity="Severity.Success" Style="width: 20%;">Konto zostało utworzone pomyślnie</MudAlert>
+}
+else if (isRegistered == false)
+{
+    <MudAlert Severity="Severity.Error" Style="width: 20%;">Nieprawidłowe dane użytkownika</MudAlert>
+}
+
+@code {
+    private string username = "";
+    private string password = "";
+    private string email = "";
+    private bool? isRegistered = null;
+
+    public async Task WebRegister()
+    {
+        var response = await _http.PostAsJsonAsync("User/RegisterUser", new UserWeb
+        {
+            Username = username,
+            Email = email,
+            Password = password
+        });
+        isRegistered = response.IsSuccessStatusCode ? true : false;
+    }
+}

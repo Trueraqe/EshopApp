@@ -1,0 +1,115 @@
+﻿@page "/users"
+@inject HttpClient _http
+@using EshopShared.Enums
+@using EshopWebBlazor.ModelsWeb
+@using MudBlazor
+
+<AuthorizeView Roles="Admin">
+    <Authorized>
+
+        <MudTable ServerData="ServerReload" Context="user" Dense="true" Hover="true" @ref="table">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Użytkownicy</MudText>
+                <MudSpacer />
+                <MudTextField T="string" ValueChanged="@(s=>OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh><MudTableSortLabel SortLabel="id_field" T="UserWeb">ID</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortLabel="username_field" T="UserWeb">Nazwa</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortLabel="email_field" T="UserWeb">Email</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortLabel="role_field" T="UserWeb">Rola</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortLabel="createdat_field" T="UserWeb">Utworzony</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel T="UserWeb">Zamówienia</MudTableSortLabel></MudTh>
+
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="ID">@user.Id</MudTd>
+                <MudTd DataLabel="Nazwa">@user.Username</MudTd>
+                <MudTd DataLabel="Email">@user.Email</MudTd>
+                <MudTd DataLabel="Rola">@user.Role</MudTd>
+                <MudTd DataLabel="Utworzony">@user.CreatedAt</MudTd>
+                <MudTd DataLabel="Zamówienia">
+                    <a href="/userordershistory/@user.Username">
+                        <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" />
+                    </a>
+                </MudTd>
+
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText>No matching records found</MudText>
+            </NoRecordsContent>
+            <LoadingContent>
+                <MudText>Loading...</MudText>
+            </LoadingContent>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
+        </MudTable>
+
+        <MudButton Class="button" href="/" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.KeyboardBackspace">Powrót</MudButton>
+
+    </Authorized>
+
+    <NotAuthorized>
+        <p>❌ Sesja wygasła.</p>
+    </NotAuthorized>
+</AuthorizeView>
+
+
+@code {
+    private IEnumerable<UserWeb> pagedData = [];
+    private MudTable<UserWeb> table = new();
+
+    private int totalItems;
+    private string searchString = "";
+
+    private async Task<TableData<UserWeb>> ServerReload(TableState state, CancellationToken token)
+    {
+        IEnumerable<UserWeb> data = await _http.GetFromJsonAsync<List<UserWeb>>("User/GetAllUsers") ?? new List<UserWeb>();
+        await Task.Delay(300, token);
+        data = data.Where(element =>
+        {
+            if (string.IsNullOrWhiteSpace(searchString))
+                return true;
+            if (element.Username.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (element.Email.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+            if ($"{element.Id} {element.Role} {element.CreatedAt}".Contains(searchString))
+                return true;
+            return false;
+        }).ToArray();
+        totalItems = data.Count();
+        if (state.SortDirection != SortDirection.None)
+        {
+            switch (state.SortLabel)
+            {
+                case "id_field":
+                    data = data.OrderByDirection(state.SortDirection, o => o.Id);
+                    break;
+                case "username_field":
+                    data = data.OrderByDirection(state.SortDirection, o => o.Username);
+                    break;
+                case "email_field":
+                    data = data.OrderByDirection(state.SortDirection, o => o.Email);
+                    break;
+                case "role_field":
+                    data = data.OrderByDirection(state.SortDirection, o => o.Role);
+                    break;
+                case "createdat_field":
+                    data = data.OrderByDirection(state.SortDirection, o => o.CreatedAt);
+                    break;
+            }
+        }
+
+        pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
+        return new TableData<UserWeb>() { TotalItems = totalItems, Items = pagedData };
+    }
+
+    private void OnSearch(string text)
+    {
+        searchString = text;
+        table.ReloadServerData();
+    }
+}

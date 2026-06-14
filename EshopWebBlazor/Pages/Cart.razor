@@ -1,0 +1,93 @@
+﻿@page "/cart"
+@inject HttpClient _http
+@inject CustomAuthStateProvider MyStateProvider
+@using EshopWebBlazor.ModelsWeb
+@using MudBlazor
+
+<AuthorizeView Roles="Admin, Customer">
+    <Authorized>
+        @* @{ var userId = context.User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value; } *@
+
+        <div style="position: fixed; top: 8%; right: 35%; text-align: center; width: 20%;">
+            <h4>Kwota całkowita: @total zł</h4><hr />
+
+            @if (cartItems != null && cartItems?.Any() == true)
+            {
+                @foreach (var i in cartItems)
+                {
+                    <h6>@i.Product.Description - @i.Product.Price zł - @i.Quantity szt.</h6><hr />
+                }
+            }
+            else
+            {
+                <p>@message</p>
+            }
+        </div>
+
+        <MudButton Class="button" Variant="Variant.Filled" Color="Color.Primary" @onclick="WebClearUserCart" StartIcon="@Icons.Material.Filled.ClearAll">Wyczyść koszyk</MudButton><br />
+
+        <MudButton Class="button" href="/payment" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Payment">Płatność</MudButton><br />
+
+        <MudButton Class="button" href="/products" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ProductionQuantityLimits">Produkty</MudButton><br /><br />
+
+        <MudButton Class="button" href="/" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.KeyboardBackspace">Powrót</MudButton><br />
+
+    </Authorized>
+
+    <NotAuthorized>
+        <p>❌ Sesja wygasła.</p>
+    </NotAuthorized>
+</AuthorizeView>
+
+
+@code {
+    private int? userId;
+    private int productId;
+    private int quantity;
+    private string message = "";
+    private decimal total;
+    private IEnumerable<CartItemWeb> cartItems = [];
+
+    public async Task WebClearUserCart()
+    {
+        userId = await MyStateProvider.GetCurrentUserId();
+
+        using var content = new MultipartFormDataContent();
+
+        content.Add(new StringContent(userId.ToString()!), "userId");
+
+        var response = await _http.PostAsync("Cart/ClearUserCart", content);
+
+        if (response.IsSuccessStatusCode)
+        {
+            await OnInitializedAsync();
+            message = "Koszyk został wyczyszczony.";
+        }
+        else
+        {
+            message = "Błąd: ClearCart";
+        }
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        userId = await MyStateProvider.GetCurrentUserId();
+
+        using var content = new MultipartFormDataContent();
+
+        content.Add(new StringContent(userId.ToString()!), "userId");
+
+        var response = await _http.PostAsync("Cart/GetTotalCartPrice", content);
+
+        if (response.IsSuccessStatusCode)
+        {
+            total = await response.Content.ReadFromJsonAsync<decimal>();
+        }
+        else
+        {
+            total = -1;
+        }
+        var response_2 = await _http.PostAsync("Cart/GetUserCartItems", content);
+
+        cartItems = await response_2.Content.ReadFromJsonAsync<List<CartItemWeb>>() ?? new List<CartItemWeb>();
+    }
+}

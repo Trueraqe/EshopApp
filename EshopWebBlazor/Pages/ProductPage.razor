@@ -1,0 +1,51 @@
+﻿@page "/products/{pageId:int}"
+@inject HttpClient _http
+@using EshopShared.Enums
+@using EshopWebBlazor.ModelsWeb
+@using MudBlazor
+
+<AuthorizeView Roles="Admin, Customer">
+    <Authorized>
+        <p>@error</p>
+
+        @if (products == null)
+        {
+            <p>Ładowanie...</p>
+        }
+        else
+        {
+            @foreach (var p in products.Where(p => p.Id == pageId).ToList())
+            {
+                <h3>Opis produktu:</h3><br />
+
+                <p3>@p.Name - @p.Category - @p.Price zł - @p.Stock szt. -  @p.Description<hr /></p3>
+            }
+            <MudButton Class="button" href="/products" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.KeyboardBackspace">Powrót</MudButton>
+        }
+    </Authorized>
+
+    <NotAuthorized>
+        <p>❌ Sesja wygasła.</p>
+    </NotAuthorized>
+</AuthorizeView>
+
+
+@code {
+    private List<ProductWeb> products = new();
+    private string error = "";
+
+    [Parameter]
+    public int pageId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            products = await _http.GetFromJsonAsync<List<ProductWeb>>("Products/GetAllProducts") ?? new List<ProductWeb>();
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+    }
+}

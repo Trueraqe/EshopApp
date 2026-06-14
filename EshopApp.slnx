@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="EshopTests/EshopTests.csproj" Id="41d35de0-a63e-417d-b0d8-848e73aaeae2" />
+  <Project Path="EshopCore/EshopCore.csproj" />
+  <Project Path="EshopShared/EshopShared.csproj" Id="f59e3800-f19f-43e1-8f46-765a7a01d467" />
+  <Project Path="EshopWebAPI/EshopWebAPI.csproj" Id="48716bf1-c16c-4453-983d-8f5125b3d473" />
+  <Project Path="EshopWebBlazor/EshopWebBlazor.csproj" Id="84c4e9eb-8643-4275-9db7-8a40dac4c07c" />
+</Solution>

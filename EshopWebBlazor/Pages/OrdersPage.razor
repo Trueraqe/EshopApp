@@ -1,0 +1,117 @@
+﻿@page "/order/{pageId:int}"
+@inject HttpClient _http
+@using EshopShared.Enums
+@using EshopWebBlazor.ModelsWeb
+@using MudBlazor
+
+<AuthorizeView Roles="Admin">
+    <Authorized>
+        <p>@error</p>
+
+        @if (orders == null)
+        {
+            <p>Ładowanie...</p>
+        }
+        else
+        {
+            @foreach (var order in orders.Where(o => o.Id == pageId))
+            {
+                <h3>Zamówienie nr. @order.Id | Kupujący: @order.Buyer.Username | Utworzone: @order.CreatedAt</h3><br />
+
+                <h4>Status: @order.Status</h4><br />
+
+                @foreach (var p in order.Items)
+                {
+                    <p3>@p.Product.Description - @p.Product.Price zł - @p.Quantity szt.</p3><hr />
+                }
+                <h4>Koszt: @order.TotalAmount zł</h4>
+            }
+            <br />
+            <MudButton Class="button" Variant="Variant.Filled" Color="Color.Primary" @onclick="WebChangeOrderStatusToNew" StartIcon="@Icons.Material.Filled.AccessibilityNew">New</MudButton>
+            <MudButton Class="button" Variant="Variant.Filled" Color="Color.Primary" @onclick="WebChangeOrderStatusToShipped" StartIcon="@Icons.Material.Filled.LocalShipping">Shipped</MudButton>
+            <MudButton Class="button" Variant="Variant.Filled" Color="Color.Primary" @onclick="WebChangeOrderStatusToCancelled" StartIcon="@Icons.Material.Filled.Cancel">Cancelled</MudButton>
+            <MudButton Class="button" Variant="Variant.Filled" Color="Color.Primary" @onclick="WebChangeOrderStatusToDelivered" StartIcon="@Icons.Material.Filled.Done">Delivered</MudButton><br /><br />
+
+            <MudButton Class="button" href="/getallusersorders" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.KeyboardBackspace">Powrót</MudButton>
+        }
+    </Authorized>
+
+    <NotAuthorized>
+        <p>❌ Sesja wygasła.</p>
+    </NotAuthorized>
+</AuthorizeView>
+
+
+@code {
+    private List<OrderWeb> orders = new();
+    private string error = "";
+    private OrderStatus statusNew = OrderStatus.New;
+    private OrderStatus statusShipped = OrderStatus.Shipped;
+    private OrderStatus statusCancelled = OrderStatus.Cancelled;
+    private OrderStatus statusDelivered = OrderStatus.Delivered;
+
+    [Parameter]
+    public int pageId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            orders = await _http.GetFromJsonAsync<List<OrderWeb>>("Order/GetAllUsersOrders") ?? new List<OrderWeb>();
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+    }
+    private async Task WebChangeOrderStatusToNew()
+    {
+        var response = await _http.PutAsJsonAsync("Order/ChangeOrderStatus", new OrderStatusChangeWeb
+        {
+            Id = pageId,
+            Status = statusNew
+        });
+        if (response.IsSuccessStatusCode)
+        {
+            await OnInitializedAsync();
+        }
+    }
+    private async Task WebChangeOrderStatusToShipped()
+    {
+        var response = await _http.PutAsJsonAsync("Order/ChangeOrderStatus", new OrderStatusChangeWeb
+        {
+            Id = pageId,
+            Status = statusShipped
+        });
+        if (response.IsSuccessStatusCode)
+        {
+            await OnInitializedAsync();
+        }
+    }
+
+    private async Task WebChangeOrderStatusToCancelled()
+    {
+        var response = await _http.PutAsJsonAsync("Order/ChangeOrderStatus", new OrderStatusChangeWeb
+        {
+            Id = pageId,
+            Status = statusCancelled
+        });
+        if (response.IsSuccessStatusCode)
+        {
+            await OnInitializedAsync();
+        }
+    }
+
+    private async Task WebChangeOrderStatusToDelivered()
+    {
+        var response = await _http.PutAsJsonAsync("Order/ChangeOrderStatus", new OrderStatusChangeWeb
+        {
+            Id = pageId,
+            Status = statusDelivered
+        });
+        if (response.IsSuccessStatusCode)
+        {
+            await OnInitializedAsync();
+        }
+    }
+}

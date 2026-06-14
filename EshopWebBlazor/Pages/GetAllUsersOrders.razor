@@ -1,0 +1,113 @@
+﻿@page "/getallusersorders"
+@inject HttpClient _http
+@using EshopShared.Enums
+@using EshopWebBlazor.ModelsWeb
+@using MudBlazor
+
+<AuthorizeView Roles="Admin">
+    <Authorized>
+
+        <MudTable ServerData="ServerReload" Context="order" Dense="true" Hover="true" @ref="table">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Historia zamówień</MudText>
+                <MudSpacer />
+                <MudTextField T="string" ValueChanged="@(s=>OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh><MudTableSortLabel SortLabel="id_field" T="OrderWeb">ID</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortLabel="userId_field" T="OrderWeb">Użytkownik</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortLabel="totalAmount_field" T="OrderWeb">Kwota (zł)</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortLabel="status_field" T="OrderWeb">Status</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortLabel="createdAt_field" T="OrderWeb">Utworzony</MudTableSortLabel></MudTh>
+                <MudTh>Edytuj</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="ID">@order.Id</MudTd>
+                <MudTd DataLabel="Użytkownik">@order.UserId</MudTd>
+                <MudTd DataLabel="Kwota (zł)">@order.TotalAmount</MudTd>
+                <MudTd DataLabel="Status">@order.Status</MudTd>
+                <MudTd DataLabel="Utworzony">@order.CreatedAt</MudTd>
+                <MudTd DataLabel="Edytuj">
+                    <a href="/order/@order.Id">
+                        <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" />
+                    </a>
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText>No matching records found</MudText>
+            </NoRecordsContent>
+            <LoadingContent>
+                <MudText>Loading...</MudText>
+            </LoadingContent>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
+        </MudTable>
+
+        <MudButton Class="button" href="/" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.KeyboardBackspace">Powrót</MudButton>
+
+    </Authorized>
+
+    <NotAuthorized>
+        <p>❌ Sesja wygasła.</p>
+    </NotAuthorized>
+</AuthorizeView>
+
+
+@code {
+    private IEnumerable<OrderWeb> pagedData = [];
+    private MudTable<OrderWeb> table = new();
+
+    private int totalItems;
+    private string searchString = "";
+
+    private async Task<TableData<OrderWeb>> ServerReload(TableState state, CancellationToken token)
+    {
+        IEnumerable<OrderWeb> data = await _http.GetFromJsonAsync<List<OrderWeb>>("Order/GetAllUsersOrders") ?? new List<OrderWeb>();
+        await Task.Delay(300, token);
+        data = data.Where(element =>
+        {
+            if (string.IsNullOrWhiteSpace(searchString))
+                return true;
+            if (element.UserId.ToString().Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (element.TotalAmount.ToString().Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+            if ($"{element.Id} {element.Status} {element.CreatedAt}".Contains(searchString))
+                return true;
+            return false;
+        }).ToArray();
+        totalItems = data.Count();
+        if (state.SortDirection != SortDirection.None)
+        {
+            switch (state.SortLabel)
+            {
+                case "id_field":
+                    data = data.OrderByDirection(state.SortDirection, o => o.Id);
+                    break;
+                case "userId_field":
+                    data = data.OrderByDirection(state.SortDirection, o => o.UserId);
+                    break;
+                case "totalAmount_field":
+                    data = data.OrderByDirection(state.SortDirection, o => o.TotalAmount);
+                    break;
+                case "status_field":
+                    data = data.OrderByDirection(state.SortDirection, o => o.Status);
+                    break;
+                case "createdAt_field":
+                    data = data.OrderByDirection(state.SortDirection, o => o.CreatedAt);
+                    break;
+            }
+        }
+
+        pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
+        return new TableData<OrderWeb>() { TotalItems = totalItems, Items = pagedData };
+    }
+
+    private void OnSearch(string text)
+    {
+        searchString = text;
+        table.ReloadServerData();
+    }
+}

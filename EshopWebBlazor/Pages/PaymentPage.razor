@@ -1,0 +1,109 @@
+﻿@page "/payment/{pay}"
+@inject HttpClient _http
+@inject CustomAuthStateProvider MyStateProvider
+@using MudBlazor
+
+<AuthorizeView Roles="Admin, Customer">
+    <Authorized>
+        <h3>Metody płatności</h3>
+        <br />
+        @if (pay == "blik")
+        {
+            <h5>Blik (6 cyfr)</h5><br />
+
+            <MudTextField Class="input" @bind-Value="blik" Placeholder="Kod blik" Variant="Variant.Text" Margin="Margin.Dense" /><br />
+
+            <h4>@message</h4>
+
+            <MudButton Class="button" Variant="Variant.Filled" Color="Color.Primary" @onclick="BlikPay" EndIcon="@Icons.Material.Filled.Send">Złóż zamówienie</MudButton><br /><br />
+        }
+        else if (pay == "card")
+        {
+            <h5>Karta (16 cyfr)</h5><br />
+
+            <MudTextField Class="input" @bind-Value="card" Placeholder="Numer karty" Variant="Variant.Text" Margin="Margin.Dense" /><br />
+
+            <h4>@message</h4>
+
+            <MudButton Class="button" Variant="Variant.Filled" Color="Color.Primary" @onclick="CardPay" EndIcon="@Icons.Material.Filled.Send">Złóż zamówienie</MudButton><br /><br />
+        }
+        else if (pay == "inshop")
+        {
+            <h5>Płatność w sklepie</h5><br />
+
+            <h4>@message</h4>
+
+            <MudButton Class="button" Variant="Variant.Filled" Color="Color.Primary" @onclick="InShopPay" EndIcon="@Icons.Material.Filled.Send">Złóż zamówienie</MudButton><br /><br />
+        }
+        <MudButton Class="button" href="/payment" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.KeyboardBackspace">Powrót</MudButton>
+
+    </Authorized>
+
+    <NotAuthorized>
+        <p>❌ Sesja wygasła.</p>
+    </NotAuthorized>
+</AuthorizeView>
+
+
+@code {
+    private int? userId;
+    private string message = "";
+    private string blik = "";
+    private string card = "";
+
+    [Parameter]
+    public string? pay { get; set; }
+
+    public async Task BlikPay()
+    {
+        if (string.IsNullOrWhiteSpace(blik) || blik.Length != 6 || !blik.All(char.IsDigit))
+        {
+            message = "Numer blik musi mieć 6 cyfr";
+            return;
+        }
+        else
+        {
+            userId = await MyStateProvider.GetCurrentUserId();
+
+            using var content = new MultipartFormDataContent();
+
+            content.Add(new StringContent(userId.ToString()!), "userId");
+
+            var response = await _http.PostAsync("Order/CreateOrder", content);
+
+            message = response.IsSuccessStatusCode ? "Zamówienie zostało złożone." : "Twój koszyk jest pusty.";
+        }
+    }
+    public async Task CardPay()
+    {
+        if (string.IsNullOrWhiteSpace(card) || card.Length != 16 || !card.All(char.IsDigit))
+        {
+            message = "Numer karty musi mieć 16 cyfr";
+            return;
+        }
+        else
+        {
+            userId = await MyStateProvider.GetCurrentUserId();
+
+            using var content = new MultipartFormDataContent();
+
+            content.Add(new StringContent(userId.ToString()!), "userId");
+
+            var response = await _http.PostAsync("Order/CreateOrder", content);
+
+            message = response.IsSuccessStatusCode ? "Zamówienie zostało złożone." : "Twój koszyk jest pusty.";
+        }
+    }
+    public async Task InShopPay()
+    {
+        userId = await MyStateProvider.GetCurrentUserId();
+
+        using var content = new MultipartFormDataContent();
+
+        content.Add(new StringContent(userId.ToString()!), "userId");
+
+        var response = await _http.PostAsync("Order/CreateOrder", content);
+
+        message = response.IsSuccessStatusCode ? "Zamówienie zostało złożone." : "Twój koszyk jest pusty.";
+    }
+}

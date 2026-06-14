@@ -1,0 +1,73 @@
+﻿@page "/userordershistory/{userName}"
+@inject HttpClient _http
+@inject CustomAuthStateProvider MyStateProvider
+@using EshopShared.Enums
+@using EshopWebBlazor.ModelsWeb
+@using MudBlazor
+
+<AuthorizeView Roles="Admin">
+    <Authorized>
+
+        <h2>Historia zamówień: @userName</h2><hr /><br />
+
+        @if (ordersData == null || !ordersData.Any())
+        {
+            <h6>Historia zamówień jest pusta.</h6>
+        }
+        else
+        {
+            @foreach (var order in ordersData)
+            {
+                <h5>Id: @order.Id - Data zamówienia: @order.CreatedAt - Status: @order.Status</h5><br />
+
+                @foreach (var item in order.Items)
+                {
+                    <p3>@item.Product.Description - @item.Product.Price zł - @item.Quantity szt.</p3><br />
+                }
+                <br />
+                <h5>Kwota: @order.TotalAmount zł</h5><hr /><br />
+            }
+        }
+        <MudButton Class="button" href="/users" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.KeyboardBackspace">Powrót</MudButton>
+    </Authorized>
+
+    <NotAuthorized>
+        <p>❌ Sesja wygasła.</p>
+    </NotAuthorized>
+</AuthorizeView>
+
+
+@code {
+    private int? UserId;
+    private string error = "";
+    private bool hasSearched;
+    private List<OrderWeb> ordersData = new();
+
+    [Parameter]
+    public string userName { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            using var content = new MultipartFormDataContent();
+            content.Add(new StringContent(userName), "username");
+
+            var response = await _http.PostAsync("Order/GetUserOrdersHistoryByUsername", content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                ordersData = await response.Content.ReadFromJsonAsync<List<OrderWeb>>() ?? new List<OrderWeb>();
+            }
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            hasSearched = true;
+        }
+    }
+}
+

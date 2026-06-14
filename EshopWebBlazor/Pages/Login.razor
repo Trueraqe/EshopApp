@@ -1,0 +1,63 @@
+﻿@page "/login"
+@inject HttpClient _http
+@inject NavigationManager _nav
+@inject CustomAuthStateProvider MyStateProvider
+@using EshopShared.Enums
+@using EshopWebBlazor.ModelsWeb
+@using MudBlazor
+
+<h3>Logowanie</h3><br />
+
+<MudTextField Class="input" @bind-Value="username" Placeholder="Nazwa użytkownika" Variant="Variant.Text" Margin="Margin.Dense" /><br />
+
+<MudTextField Class="input" InputType="InputType.Password" @bind-Value="password" Placeholder="Hasło" Variant="Variant.Text" Margin="Margin.Dense" /><br />
+
+<MudButton Class="button" Variant="Variant.Filled" Color="Color.Primary" Onclick="WebLogin" StartIcon="@Icons.Material.Filled.Login">Zaloguj</MudButton><br />
+
+<p>@message</p>
+
+<MudButton Class="button" href="/" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.KeyboardBackspace">Powrót</MudButton>
+
+@if (isLogged == true)
+{
+    <MudAlert Severity="Severity.Success" Style="width: 20%;">Zostałeś zalogowany</MudAlert>
+}
+else if (isLogged == false)
+{
+    <MudAlert Severity="Severity.Error" Style="width: 20%;">Nieprawidłowe dane użytkownika</MudAlert>
+}
+
+@code {
+    private string username = "";
+    private string password = "";
+    private string message = "";
+    private UserWeb user = new();
+    private bool? isLogged = null;
+
+    private async Task WebLogin()
+    {
+        var response = await _http.PostAsJsonAsync("Auth/login", new UserWeb
+        {
+            Username = username,
+            Password = password
+        });
+
+        if (response.IsSuccessStatusCode)
+        {
+            user = await response.Content.ReadFromJsonAsync<UserWeb>() ?? new UserWeb();
+
+            // Musisz zrzutować AuthStateProvider na swoją klasę, by widzieć tę metodę
+            var customProvider = (CustomAuthStateProvider)MyStateProvider;
+
+            await customProvider.MarkUserAsAuthenticated(user.Id.ToString(), user.Role.ToString());
+
+            isLogged = true;
+
+            _nav.NavigateTo("/");
+        }
+        else
+        {
+            isLogged = false;
+        }
+    }
+}

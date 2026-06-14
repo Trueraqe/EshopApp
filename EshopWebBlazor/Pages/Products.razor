@@ -1,0 +1,224 @@
+﻿@page "/products"
+@inject HttpClient _http
+@using EshopShared.Enums
+@using EshopWebBlazor.ModelsWeb
+@using MudBlazor
+@inject CustomAuthStateProvider MyStateProvider
+
+<AuthorizeView Roles="Admin, Customer">
+    <Authorized>
+
+        <MudTable ServerData="ServerReload" Context="mudContext" Dense="true" Hover="true" @ref="table">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Produkty User</MudText>
+                <MudSpacer />
+                <MudTextField T="string" ValueChanged="@(s => OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh><MudTableSortLabel SortLabel="name_field" T="ProductWeb">Nazwa</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortLabel="category_field" T="ProductWeb">Kategoria</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortLabel="price_field" T="ProductWeb">Cena (zł)</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortLabel="stock_field" T="ProductWeb">Dostępna ilość</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortLabel="description_field" T="ProductWeb">Opis</MudTableSortLabel></MudTh>
+
+                <MudTh>Opcje</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Nazwa">@mudContext.Name</MudTd>
+                <MudTd DataLabel="Kategoria">@mudContext.Category</MudTd>
+                <MudTd DataLabel="Cena (zł)">@mudContext.Price</MudTd>
+                <MudTd DataLabel="Dostępna ilość">@mudContext.Stock</MudTd>
+                <MudTd DataLabel="Opis">@mudContext.Description</MudTd>
+                <MudTd DataLabel="Edytuj">
+                    <a href="/products/@mudContext.Id">
+                        <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" />
+                    </a>
+                    <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.AddShoppingCart" OnClick="@(() => WebAddProductToCart(mudContext.Id))" />
+                    <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.RemoveShoppingCart" OnClick="@(() => WebRemoveProductFromCart(mudContext.Id))" />
+                    <MudBadge Content="@(cartItems.Where(i => i.ProductId == mudContext.Id).Sum(i => i.Quantity))" Color="Color.Tertiary" Overlap="true" Class="mx-6 my-4">
+                        <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" Color="Color.Default" />
+                    </MudBadge>
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText>No matching records found</MudText>
+            </NoRecordsContent>
+            <LoadingContent>
+                <MudText>Loading...</MudText>
+            </LoadingContent>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
+        </MudTable>
+
+        <MudButton Class="button" href="/" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.KeyboardBackspace">Powrót</MudButton>
+
+        <div Style="position: fixed; right: 70px; bottom: 70px">
+            <MudBadge Content="cartCount" Color="Color.Error" Overlap="true" Class="mx-6 my-4">
+                <MudFab Href="/cart" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ShoppingCart" DropShadow="false" />
+            </MudBadge>
+        </div>
+
+    </Authorized>
+
+    <NotAuthorized>
+        <p>❌ Sesja wygasła.</p>
+    </NotAuthorized>
+</AuthorizeView>
+
+
+@code {
+    private IEnumerable<ProductWeb> pagedData = [];
+    private MudTable<ProductWeb> table = new();
+
+    private int totalItems;
+    private string searchString = "";
+
+    private async Task<TableData<ProductWeb>> ServerReload(TableState state, CancellationToken token)
+    {
+        IEnumerable<ProductWeb> data = await _http.GetFromJsonAsync<List<ProductWeb>>("Products/GetAllProducts", token) ?? new List<ProductWeb>();
+        await Task.Delay(300, token);
+        data = data.Where(element =>
+        {
+            if (string.IsNullOrWhiteSpace(searchString))
+                return true;
+            if (element.Price.ToString().Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (element.Stock.ToString().Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+            if ($"{element.Name} {element.Category} {element.Description}".Contains(searchString))
+                return true;
+            return false;
+        }).ToArray();
+        totalItems = data.Count();
+        if (state.SortDirection != SortDirection.None)
+        {
+            switch (state.SortLabel)
+            {
+                case "name_field":
+                    data = data.OrderByDirection(state.SortDirection, o => o.Name);
+                    break;
+                case "category_field":
+                    data = data.OrderByDirection(state.SortDirection, o => o.Category);
+                    break;
+                case "price_field":
+                    data = data.OrderByDirection(state.SortDirection, o => o.Price);
+                    break;
+                case "stock_field":
+                    data = data.OrderByDirection(state.SortDirection, o => o.Stock);
+                    break;
+                case "description_field":
+                    data = data.OrderByDirection(state.SortDirection, o => o.Description);
+                    break;
+            }
+        }
+
+        pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
+        return new TableData<ProductWeb>() { TotalItems = totalItems, Items = pagedData };
+    }
+
+    private void OnSearch(string text)
+    {
+        searchString = text;
+        table.ReloadServerData();
+    }
+
+    private int? userId;
+    private decimal total;
+    private int quantity = 1;
+    private int? cartCount;
+    private string message = "";
+    private IEnumerable<CartItemWeb> cartItems = [];
+    protected override async Task OnInitializedAsync()
+    {
+        userId = await MyStateProvider.GetCurrentUserId();
+
+        using var content = new MultipartFormDataContent();
+
+        content.Add(new StringContent(userId.ToString()!), "userId");
+
+        var response = await _http.PostAsync("Cart/GetTotalCartPrice", content);
+
+        if (response.IsSuccessStatusCode)
+        {
+            total = await response.Content.ReadFromJsonAsync<decimal>();
+        }
+        else
+        {
+            total = -1;
+        }
+        var response_2 = await _http.PostAsync("Cart/GetUserCartItems", content);
+
+        cartItems = await response_2.Content.ReadFromJsonAsync<List<CartItemWeb>>() ?? new List<CartItemWeb>();
+
+        cartCount = cartItems.Sum(i => i.Quantity);
+    }
+
+    public async Task WebAddProductToCart(int productId)
+    {
+        userId = await MyStateProvider.GetCurrentUserId();
+
+        var response = await _http.PostAsJsonAsync("Cart/AddProductToCart", new CartItemWeb
+        {
+            UserId = userId,
+            ProductId = productId,
+            Quantity = quantity
+        });
+
+        if (response.IsSuccessStatusCode)
+        {
+            await OnInitializedAsync();
+            message = "Produkt dodany do koszyka";
+        }
+        else
+        {
+            message = "Nieprawidłowy produkt lub ilość.";
+        }
+    }
+    public async Task WebRemoveProductFromCart(int productId)
+    {
+        userId = await MyStateProvider.GetCurrentUserId();
+
+        var response = await _http.PostAsJsonAsync("Cart/RemoveProductFromCart", new CartItemWeb
+        {
+            UserId = userId,
+            ProductId = productId,
+            Quantity = quantity
+        });
+
+        if (response.IsSuccessStatusCode)
+        {
+            await OnInitializedAsync();
+            message = "Produkt usunięty z koszyka.";
+        }
+        else
+        {
+            message = "Nieprawidłowy produkt lub ilość.";
+        }
+    }
+    public async Task<int> CountSpecItem(int productId)
+    {
+        return cartItems.Where(i => i.ProductId == productId).Count();
+    }
+    public async Task WebClearUserCart()
+    {
+        userId = await MyStateProvider.GetCurrentUserId();
+
+        using var content = new MultipartFormDataContent();
+
+        content.Add(new StringContent(userId.ToString()!), "userId");
+
+        var response = await _http.PostAsync("Cart/ClearUserCart", content);
+
+        if (response.IsSuccessStatusCode)
+        {
+            await OnInitializedAsync();
+            message = "Koszyk został wyczyszczony.";
+        }
+        else
+        {
+            message = "Błąd: ClearCart";
+        }
+    }
+}

@@ -1,0 +1,23 @@
+﻿@page "/payment"
+@using MudBlazor
+
+<h3>Metody płatności</h3><br />
+
+<AuthorizeView Roles="Admin, Customer">
+    <Authorized>
+        <MudButton Class="button" href="/payment/blik" Variant="Variant.Filled" Color="Color.Primary">Blik</MudButton>
+        <MudButton Class="button" href="/payment/card" Variant="Variant.Filled" Color="Color.Primary">Karta</MudButton>
+        <MudButton Class="button" href="/payment/inshop" Variant="Variant.Filled" Color="Color.Primary">Płatność w sklepie</MudButton><br /><br />
+
+        <MudButton Class="button" href="/cart" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.KeyboardBackspace">Powrót</MudButton>
+    </Authorized>
+
+    <NotAuthorized>
+        <p>❌ Sesja wygasła.</p>
+    </NotAuthorized>
+</AuthorizeView>
+
+
+@code {
+
+}

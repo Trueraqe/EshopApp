@@ -1,0 +1,67 @@
+﻿@page "/ordershistory"
+@inject HttpClient _http
+@inject CustomAuthStateProvider MyStateProvider
+@using EshopShared.Enums
+@using EshopWebBlazor.ModelsWeb
+@using MudBlazor
+
+<AuthorizeView Roles="Admin, Customer">
+    <Authorized>
+        <h2>Historia zamówień</h2><hr /><br />
+
+        @if (ordersData == null || !ordersData.Any())
+        {
+            <h5>Historia zamówień jest pusta.</h5><br />
+
+            <MudButton Class="button" href="/" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.KeyboardBackspace">Powrót</MudButton>
+        }
+        else
+        {
+            @foreach (var order in ordersData)
+            {
+                <h5>Data zamówienia: @order.CreatedAt</h5><br />
+
+                @foreach (var item in order.Items)
+                {
+                    <p3>@item.Product.Description - @item.Product.Price zł - @item.Quantity szt.</p3><br />
+                }
+                <br />
+                <h5>Kwota: @order.TotalAmount zł - Status: @order.Status</h5><hr /><br />
+            }
+            <MudButton Class="button" href="/" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.KeyboardBackspace">Powrót</MudButton>
+        }
+    </Authorized>
+
+    <NotAuthorized>
+        <p>❌ Sesja wygasła.</p>
+    </NotAuthorized>
+</AuthorizeView>
+
+
+@code {
+    private int? UserId;
+    private string error = "";
+    private List<OrderWeb> ordersData = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            UserId = await MyStateProvider.GetCurrentUserId();
+
+            using var content = new MultipartFormDataContent();
+            content.Add(new StringContent(UserId.ToString()!), "userId");
+
+            var response = await _http.PostAsync("Order/LoggedInUserOdrersHistory", content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                ordersData = await response.Content.ReadFromJsonAsync<List<OrderWeb>>() ?? new List<OrderWeb>();
+            }
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+    }
+}

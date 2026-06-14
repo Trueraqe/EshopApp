@@ -1,0 +1,46 @@
+﻿@page "/"
+@using MudBlazor
+@inject HttpClient _http
+@inject CustomAuthStateProvider MyStateProvider
+
+<AuthorizeView Roles="Admin">
+    <Authorized>
+        @* @{ var userId = context.User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value; } *@
+        <h3>Panel administratora</h3>
+
+        <MudButton class="button" href="/users" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.SupervisedUserCircle">Użytkownicy</MudButton><br />
+
+        <MudButton class="button" href="/getallusersorders" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.History">Historia zamówień</MudButton><br />
+
+        <MudButton class="button" href="/productpanel" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AddCircle">Panel produtków</MudButton><br />
+
+    </Authorized>
+</AuthorizeView>
+
+<AuthorizeView Roles="Admin, Customer">
+    <Authorized>
+        <h3>Panel klienta</h3>
+        
+        <MudButton class="button" href="/products" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ListAlt">Produkty</MudButton><br />
+
+        <MudButton class="button" href="/cart" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ShoppingCart">Koszyk</MudButton><br />
+
+        <MudButton class="button" href="/ordershistory" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.History">Historia zamówień</MudButton><br /><br />
+
+        <MudButton class="button" href="/" Variant="Variant.Filled" Color="Color.Primary" OnClick="WebLogout" StartIcon="@Icons.Material.Filled.Logout">Wyloguj</MudButton><br />
+
+    </Authorized>
+
+    <NotAuthorized>
+        <MudButton class="button" href="/login" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Login">Logowanie</MudButton><br />
+
+        <MudButton class="button" href="/register" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AccountCircle">Rejestracja</MudButton><br />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private async Task WebLogout()
+    {
+        await MyStateProvider.MarkUserAsLoggedOut();
+    }
+}
