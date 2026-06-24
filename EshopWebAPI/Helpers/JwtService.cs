@@ -30,29 +30,3 @@ namespace EshopWebAPI.Helpers
         }
     }
 }
-
-//using BCrypt.Net;
-
-//// 1. REJESTRACJA: Haszowanie hasła przed zapisem do bazy
-//string password = "MojeTajneHaslo123";
-//string passwordHash = BCrypt.Net.BCrypt.HashPassword(password);
-
-//// To zapisujesz w bazie danych (np. kolumna PasswordHash)
-//Console.WriteLine($"Hasz do bazy: {passwordHash}");
-
-//// ---------------------------------------------------------
-
-//// 2. LOGOWANIE: Sprawdzanie czy podane hasło pasuje do hasza z bazy
-//string inputPassword = "MojeTajneHaslo123"; // To wpisał użytkownik
-//bool isCorrect = BCrypt.Net.BCrypt.Verify(inputPassword, passwordHash);
-
-//if (isCorrect)
-//{
-//    Console.WriteLine("Zalogowano pomyślnie!");
-//}
-//else
-//{
-//    Console.WriteLine("Błędne hasło.");
-//}
-////Liczba 12 to "cost factor" - im wyższa, tym wolniej generuje się hasz (bezpieczniej)
-//string strongerHash = BCrypt.Net.BCrypt.HashPassword(password, 12);
