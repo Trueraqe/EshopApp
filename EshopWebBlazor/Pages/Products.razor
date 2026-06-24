@@ -10,7 +10,7 @@
 
         <MudTable ServerData="ServerReload" Context="mudContext" Dense="true" Hover="true" @ref="table">
             <ToolBarContent>
-                <MudText Typo="Typo.h6">Produkty User</MudText>
+                <MudText Typo="Typo.h6">Produkty</MudText>
                 <MudSpacer />
                 <MudTextField T="string" ValueChanged="@(s => OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
                               AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
@@ -54,7 +54,7 @@
 
         <MudButton Class="button" href="/" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.KeyboardBackspace">Powrót</MudButton>
 
-        <div Style="position: fixed; right: 70px; bottom: 70px">
+        <div style="position: fixed; right: 70px; bottom: 70px">
             <MudBadge Content="cartCount" Color="Color.Error" Overlap="true" Class="mx-6 my-4">
                 <MudFab Href="/cart" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ShoppingCart" DropShadow="false" />
             </MudBadge>

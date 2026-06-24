@@ -36,7 +36,6 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
             return new AuthenticationState(_anonymous);
         }
     }
-
     public async Task MarkUserAsAuthenticated(string userId, string userRole)
     {
         await _js.InvokeVoidAsync("localStorage.setItem", "userId", userId);
@@ -71,4 +70,17 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
         }
         return null;
     }
+    public async Task SetColorUI(string colorUI)
+    {
+        await _js.InvokeVoidAsync("localStorage.setItem", "colorUI", colorUI);
+    }
+    public async Task<string> GetColorUI()
+    {
+        return await _js.InvokeAsync<string>("localStorage.getItem", "colorUI");
+    }
+    public async Task<string> ResetColorUI()
+    {
+        return await _js.InvokeAsync<string>("localStorage.setItem", "colorUI", "null");
+    }
+
 }

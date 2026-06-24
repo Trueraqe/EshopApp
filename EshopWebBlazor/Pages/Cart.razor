@@ -7,6 +7,7 @@
 <AuthorizeView Roles="Admin, Customer">
     <Authorized>
         @* @{ var userId = context.User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value; } *@
+        <h3>Koszyk</h3>
 
         <div style="position: fixed; top: 8%; right: 35%; text-align: center; width: 20%;">
             <h4>Kwota całkowita: @total zł</h4><hr />

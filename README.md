@@ -1,6 +1,6 @@
 # EshopApp
 
-Aplikacja konsolowa/webowa sklepu online.
+Aplikacja konsolowa/webowa sklepu internetowego składająca się z API i frontendu.
 
 # Funkcje
 
@@ -10,6 +10,7 @@ Aplikacja konsolowa/webowa sklepu online.
 - Składanie zamówień
 - System płatności
 - Operacje CRUD na produktach
+- Zmiana koloru tła
 - Wyświetlanie historii zamówień
 - Wyświetlanie & wyszukiwanie produktów
 - Wyświetlanie & wyszukiwanie użytkowników
@@ -17,17 +18,11 @@ Aplikacja konsolowa/webowa sklepu online.
 
 # Użyte technologie
 
-- C#, Blazor WebAssembly, HTML, CSS, SQL, JS
-- Microsoft.EntityFrameworkCore,
-- Microsoft.EntityFrameworkCore.Sqlite,
-- Microsoft.EntityFrameworkCore.Tools,
-- Microsoft.AspNetCore.Identity,
-- System.Security.Cryptography.Xml,
-- FluentValidation
-- Swashbuckle.AspNetCore
-- Blazor.LocalStorage.WebAssembly
-- MudBlazor
-- Xunit.v3
+- **Backend:** .NET, C#
+- **Frontend:** Blazor WebAssembly, MudBlazor, HTML, CSS, JavaScript
+- **Baza danych & ORM:** SQLite, Entity Framework Core
+- **Testy:** xUnit
+- **Inne:** Microsoft.AspNetCore.Identity(hashowanie / walidacja hasła), FluentValidation(walidacja danych użytkownika), Swashbuckle.AspNetCore(swagger test api), Blazor.LocalStorage.WebAssembly(token użytkownika)
 
 # Utworzone konta "admin" (użytkownik dodatkowymi opcjami) i "user" (zwykły użytkownik)
 
