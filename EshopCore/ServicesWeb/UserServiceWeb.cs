@@ -27,8 +27,13 @@ namespace EshopCore.ServicesWeb
             _validator = validator;
         }
 
-        public async Task<bool> RegisterUser(string username, string email, string password)
+        public async Task<bool> RegisterUser(string username, string email, string password, string passwordRepeat)
         {
+            if (password != passwordRepeat)
+            {
+                return false;
+            }
+
             var sql_user = _context.Users.AsNoTracking().FirstOrDefault(u => u.Username.ToLower() == username.ToLower() || u.Email.ToLower() == email.ToLower());
 
             if (sql_user == null)

@@ -24,12 +24,11 @@
                 <p>@message</p>
             }
         </div>
-
-        <MudButton Class="button" Variant="Variant.Filled" Color="Color.Primary" @onclick="WebClearUserCart" StartIcon="@Icons.Material.Filled.ClearAll">Wyczyść koszyk</MudButton><br />
+        <MudButton Class="button" href="/products" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ProductionQuantityLimits">Produkty</MudButton><br />
 
         <MudButton Class="button" href="/payment" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Payment">Płatność</MudButton><br />
 
-        <MudButton Class="button" href="/products" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ProductionQuantityLimits">Produkty</MudButton><br /><br />
+        <MudButton Class="button" Variant="Variant.Filled" Color="Color.Primary" @onclick="WebClearUserCart" StartIcon="@Icons.Material.Filled.ClearAll">Wyczyść koszyk</MudButton><br /><br />
 
         <MudButton Class="button" href="/" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.KeyboardBackspace">Powrót</MudButton><br />
 
