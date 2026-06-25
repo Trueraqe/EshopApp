@@ -25,7 +25,7 @@ namespace EshopWebAPI.Controllers
         [HttpPost("RegisterUser")]
         public async Task<IActionResult> APIRegisterUser([FromBody] UserRegisterAPI user)
         {
-            var register = await _userService.RegisterUser(user.Username, user.Email, user.Password);
+            var register = await _userService.RegisterUser(user.Username, user.Email, user.Password, user.PasswordRepeat);
 
             if (register == false)
                 return NotFound();

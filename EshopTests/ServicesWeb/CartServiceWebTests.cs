@@ -25,8 +25,8 @@ public class CartServiceWebTests
         Product product_3 = new("product3", "category3", 50, 60, "description3");
         Product product_4 = new("product4", "category4", 70, 80, "description4");
 
-        await us.RegisterUser("user1", "user1@email", "useR1?123");
-        await us.RegisterUser("user2", "user2@email", "useR2?123");
+        await us.RegisterUser("user1", "user1@email", "useR1?123", "useR1?123");
+        await us.RegisterUser("user2", "user2@email", "useR2?123", "useR2?123");
         await ps.AddProduct(product_1);
         await ps.AddProduct(product_2);
         await ps.AddProduct(product_3);

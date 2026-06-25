@@ -6,11 +6,11 @@ Aplikacja konsolowa/webowa sklepu internetowego składająca się z API i fronte
 
 - Rejestracja
 - Logowanie
-- Dodawanie produktów do koszyka
 - Składanie zamówień
 - System płatności
-- Operacje CRUD na produktach
 - Zmiana koloru tła
+- Operacje CRUD na produktach
+- Dodawanie produktów do koszyka
 - Wyświetlanie historii zamówień
 - Wyświetlanie & wyszukiwanie produktów
 - Wyświetlanie & wyszukiwanie użytkowników

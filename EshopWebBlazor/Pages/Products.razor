@@ -21,7 +21,6 @@
                 <MudTh><MudTableSortLabel SortLabel="price_field" T="ProductWeb">Cena (zł)</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel SortLabel="stock_field" T="ProductWeb">Dostępna ilość</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel SortLabel="description_field" T="ProductWeb">Opis</MudTableSortLabel></MudTh>
-
                 <MudTh>Opcje</MudTh>
             </HeaderContent>
             <RowTemplate>
@@ -54,12 +53,31 @@
 
         <MudButton Class="button" href="/" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.KeyboardBackspace">Powrót</MudButton>
 
-        <div style="position: fixed; right: 70px; bottom: 70px">
+        <div style="position: fixed; right: 137px; bottom: 160px; z-index: 1400;">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => ToggleDrawer())">Pokaż koszyk</MudButton>
+        </div>
+
+        <div style="position: fixed; right: 70px; bottom: 70px; z-index: 1400;">
             <MudBadge Content="cartCount" Color="Color.Error" Overlap="true" Class="mx-6 my-4">
-                <MudFab Href="/cart" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ShoppingCart" DropShadow="false" />
+                <MudButton Href="/cart" Class="button" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ShoppingCart" DropShadow="false">Przejdź do koszyka</MudButton>
             </MudBadge>
         </div>
 
+        <MudLayout>
+            <MudDrawer @bind-Open="@_open" Anchor="Anchor.End" Width="21%" Overlay="true" Elevation="1" Variant="@DrawerVariant.Temporary">
+                <MudDrawerHeader>
+                    <MudText Typo="Typo.h6">Koszyk</MudText>
+                </MudDrawerHeader>
+                <MudNavMenu>
+                    @foreach (var i in cartItems)
+                    {
+                        <MudNavLink Match="NavLinkMatch.All">@i.Product.Description - @i.Product.Price zł - @i.Quantity szt.</MudNavLink>
+                    }
+                    <br />
+                    <MudNavLink Match="NavLinkMatch.All"><h5>Kwota całkowita: @total zł</h5></MudNavLink>
+                </MudNavMenu>
+            </MudDrawer>
+        </MudLayout>
     </Authorized>
 
     <NotAuthorized>
@@ -69,11 +87,18 @@
 
 
 @code {
+    private bool _open;
+
+    private void ToggleDrawer()
+    {
+        _open = !_open;
+    }
     private IEnumerable<ProductWeb> pagedData = [];
     private MudTable<ProductWeb> table = new();
 
     private int totalItems;
     private string searchString = "";
+
 
     private async Task<TableData<ProductWeb>> ServerReload(TableState state, CancellationToken token)
     {

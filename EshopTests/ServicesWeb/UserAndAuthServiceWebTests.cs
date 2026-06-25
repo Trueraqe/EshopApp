@@ -20,14 +20,16 @@ public class UserAndAuthServiceWebTests
         IAuthServiceWeb auth = new AuthServiceWeb(_context);
 
         // RegisterUser
-        await us.RegisterUser("user1", "user1@email", "useR1?123");
-        await us.RegisterUser("user2", "user2@email", "useR2?123");
-        var wrongEmailUser = await us.RegisterUser("user3", "user3email", "useR2?123");
+        await us.RegisterUser("user1", "user1@email", "useR1?123", "useR1?123");
+        await us.RegisterUser("user2", "user2@email", "useR2?123", "useR2?123");
+        var wrongEmailUser = await us.RegisterUser("user3", "user3email", "useR2?123", "useR2?123");
+        var diffrentPassword = await us.RegisterUser("user4", "user4@email", "useR4?123", "useR4?124");
 
         var registered = _context.Users;
 
         Assert.Equal(2, registered.Count());
         Assert.False(wrongEmailUser);
+        Assert.False(diffrentPassword);
 
         // GetByUsername
         var userByName = await us.GetUserByUsername("nullcheck");

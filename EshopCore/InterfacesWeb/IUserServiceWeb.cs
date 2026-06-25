@@ -8,7 +8,7 @@ namespace EshopCore.InterfacesWeb
     public interface IUserServiceWeb
     {
         // Rejestracja użytkownika
-        Task<bool> RegisterUser(string username, string email, string password);
+        Task<bool> RegisterUser(string username, string email, string password, string passwordRepeat);
 
         // Wyświetlanie danych użytkownika
         Task<List<User>> GetUserByUsername(string username);

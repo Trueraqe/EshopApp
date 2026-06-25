@@ -13,9 +13,10 @@
 <MudTextField Class="input" @bind-Value="email" Placeholder="Email" Variant="Variant.Text" Margin="Margin.Dense" /><br />
 
 <MudTextField Class="input" InputType="InputType.Password" @bind-Value="password" Placeholder="Hasło" Variant="Variant.Text" Margin="Margin.Dense" /><br />
+<MudTextField Class="input" InputType="InputType.Password" @bind-Value="passwordRepeat" Placeholder="Powtórz hasło" Variant="Variant.Text" Margin="Margin.Dense" /><br />
 <label>( Hasło musi mieć min. 8 znaków, zawierać małą i wielką literę oraz cyfrę i znak specjalny )</label><br /><br />
 
-<MudButton Class="button" Variant="Variant.Filled" Color="Color.Primary" @onclick="WebRegister" StartIcon="@Icons.Material.Filled.AccountCircle">Zarejestruj</MudButton><br />
+<MudButton Class="button" Variant="Variant.Filled" Color="Color.Primary" @onclick="WebRegister" StartIcon="@Icons.Material.Filled.AccountCircle">Zarejestruj</MudButton><br /><br />
 
 <MudButton Class="button" href="/" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.KeyboardBackspace">Powrót</MudButton>
 
@@ -31,6 +32,7 @@ else if (isRegistered == false)
 @code {
     private string username = "";
     private string password = "";
+    private string passwordRepeat = "";
     private string email = "";
     private bool? isRegistered = null;
 
@@ -40,7 +42,8 @@ else if (isRegistered == false)
         {
             Username = username,
             Email = email,
-            Password = password
+            Password = password,
+            PasswordRepeat = passwordRepeat
         });
         isRegistered = response.IsSuccessStatusCode ? true : false;
     }
